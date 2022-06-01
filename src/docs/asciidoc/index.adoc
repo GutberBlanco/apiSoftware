@@ -1,0 +1,736 @@
+= {product} - Histórias de Usuario
+Universidad Católica Boliviana San Pablo - Regional La Paz. <teddy.aruquipa@ucb.edu.bo>
+1.0.0
+:product: BOT Empresa Metal Corp.
+
+## Introducción
+El siguiente documento presenta el detalle de todas las historías de usuario necesarias para la construcción de un BOT en la plataforma de Telegram, el cuál estará dirigido para la empresa Metal Corp, la cual tiene como principal actividad la venta de productos de construcción.
+
+Se ha establecido que la funcionalidad mínima para la implementación de dicho BOT será la siguiente:
+
+Para los clientes:
+
+ 1. Los clientes pueden ver información de la empresa, como ser las sucursales disponibles, direcciones y horarios.
+ 2. Los clientes pueden consultar los productos disponibles mediante el BOT, asi como tambien la sucursal en la que se encuentran.
+ 3. Los clientes pueden realizar una reserva de producto para recogerlo posteriormente.
+ 4. Los clientes pueden recibir una cotización de cierto grupo de productos de uso específico en formato .PDF mediante el BOT.
+ 
+
+Para el personal de la empresa:
+
+ 1. El personal de la empresa debe poder aprobar o negar las reservas de productos.
+ 2. El personal puede consultar un producto de otra sucursal diferente a la suya.
+ 3. El personal de la empresa podra añadir o eliminar productos.
+
+Para el Administrador de la empresa:
+
+ 1. El administrador de la empresa debe poder registrar y actualizar los productos.
+
+## Histórias de Usuario.
+
+### 090 - Habilitación de clientes para realizar reservas
+*Autor:* Teddy Leyder Aruquipa Peralta
+
+*Fecha:* 10/03/2022
+
+*Prioridad:* ALTA
+
+#### Descripción
+
+Un `Cliente` desea  realizar por primera vez una reserva de productos a través del `BOT`, por lo que realiza una solicitud de registro para hacer dicha reserva. Para ello el cliente ya debe haber realizado por lo menos 2 compras en las tiendas físicas, es asi que el BOT verificará si cumple con dicha condición en base a los datos del cliente, como ser:
+ 
+     * Nombre completo
+     * NIT o Carnet
+     * Cantidad de compras físicas.
+
+El BOT en base a dichos datos, podrá seleccionar si es o no un cliente habilitado para realizar reservas.
+
+La solicitud se hará por los siguientes estados:
+
+* *SOLICITADO*: Cuando el cliente solicite registrarse para realizar reservas de productos.
+* *NO VÁLIDO*: Cuando el cliente no completa correctamente su registro.
+* *APROBADO*: Cuando el cliente cumple con la condición previa de haber realizado al menos 2 compras físicas y se registra exitosamente y puede proceder a realizar sus reservas.
+* *RECHAZADO*: Cuando el cliente no cumple con la condición previa de haber realizado al menos 2 compras físicas.
+* *CANCELADA*: El cliente cancela la solicitud de registro estando habilitado.
+
+El diagrama de secuencia será el siguiente:
+
+[plantuml, format="png", id="estados-solicitud090"]
+....
+@startuml
+
+actor Cliente
+boundary "interfaz BOT" as GUI
+control "validador BOT" as CONTROL
+entity BOT
+database BaseBOT
+
+Cliente -> GUI : "/inicio"
+GUI -> Cliente : "opciones"
+Cliente -> GUI : "/registroCliente"
+GUI -> CONTROL : "Solicitud de registro de cliente"
+CONTROL -> BOT : "verificar habilitación cliente"
+BOT -> CONTROL: "Solicitar NIT o Carnet"
+CONTROL -> GUI: "Solicitar DATOS"
+Cliente -> GUI: "DATOS"
+GUI ->CONTROL : "DATOS INGRESADOS"
+CONTROL -> BOT: "DATOS VALIDADOS"
+BOT -> BaseBOT: "Verificar Cliente"
+BaseBOT -> BOT: "Cliente Verificado"
+BOT -> CONTROL: "Cliente Verificado"
+CONTROL -> GUI: "Cliente Verificado"
+Cliente -> GUI: "Usted esta habilitado para registrarse y hacer reservas, ¿desea continuar?"
+GUI -> CONTROL: "OPCION SI"
+CONTROL -> BOT: "validar respuesta"
+BOT -> CONTROL: "Solicitar datos Cliente"
+CONTROL -> GUI: "Solicitar DATOS"
+Cliente -> GUI: "DATOS"
+GUI ->CONTROL : "DATOS INGRESADOS"
+CONTROL -> BOT: "DATOS VALIDADOS"
+BOT -> BaseBOT: "ALMACENAR DATOS CLIENTE"
+BaseBOT -> BOT: "Resultado"
+BOT -> CONTROL: "Resultado"
+CONTROL -> GUI: "Enviar resultado"
+GUI -> Cliente: "Mostrar resultado"
+@enduml
+....
+
+#### Escenarios
+
+1. Cliente NO habilitado
+2. Cliente habilitado y registro CORRECTO.
+3. El cliente habilitado cancela el registro.
+4. Validación de parámetros ingresados.
+
+#### Casos de Prueba
+
+*90.1.1 Cliente No habilitado*
+Descripción: Al momento de querer proceder con el registro de un cliente para realizar reservas, el bot pedirá el NIT o carnet del cliente para verificar si cumple con los requisitos para registrarse, en caso de estar habilitado se le pedirá una cantidad de parámetros obligatorios: Nombre completo, dirección, teléfono y correo.
+
+En caso de que el cliente no cumpla con el requisito previo, no se debe proceder a registrar al cliente para reservas.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/registroCliente`.
+- Datos: comando `/registroCliente`
+- Resultado: El BOT retorna un mensaje "Ingrese NIT o carnet".
+2. El `Cliente` ingresa su NIT o carnet.
+- Datos: Ingresa `6864680`
+- Resultado: El BOT retorna un mensaje "No se encuentra habilitado para registrarse, desea realizar otra acción? si/no".
+3. El `Cliente` envia `/no`.
+- Datos: Envía no.
+- Resultado: El BOT le muestra el menú de inicio.
+
+*90.2.1 Registro correcto de nuevo cliente*
+
+Descripción: Al momento de querer proceder con el registro de un cliente para realizar reservas , habiendo el BOT ya verificado su habilitación, se le pedirá una cantidad de parametros obligatorios: Nombre completo, dirección, teléfono y correo.
+
+Pasos:
+
+ 1. Ingresar al BOT via Telegram y enviar el comando `/inicio`
+ - Datos: NINGUNO
+ - Resultado esperado: El BOT retorna un mensaje. "Qué desea realizar?:
+
+    1) Ver información de la empresa.
+    2) Ver lista de productos.
+    3) Realizar reserva.
+    4) Salir.
+
+ 2. El `Cliente` envía el comando `/registroCliente`.
+ - Datos: comando `/registroCliente`.
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese NIT o carnet".
+
+ 3. El `Cliente` ingresa su NIT o carnet.
+ - Datos: ingresa el `NIT o carnet`.
+ - Resultado esperado: El BOT retorna un mensaje. "Usted se encuentra habilitado/a para registrarse y hacer reservas, ingrese su nombre completo. Formato: Apellido Paterno, Apellido Materno y Nombre/s".
+
+ 4. El `Cliente` ingresa su nombre completo.
+ - Datos: ingresa su `nombre completo`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese su dirección"
+
+ 5. El `Cliente` ingresa su dirección.
+ - Datos: ingresa su `dirección`.
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese su número de teléfono"
+
+ 6. El `Cliente` ingresa su número de teléfono.
+ - Datos: ingresa su `teléfono`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese su correo"
+
+ 7. El `Cliente` ingresa su correo
+ - Datos: ingresa su `coreeo electrónico`
+ - Resultado esperado: El BOT retorna un mensaje. "Registro completado"
+ 
+*90.3.1 Cliente habilitado cancela el registro*
+Descripción: Al momento de querer proceder con el registro de un cliente para realizar reservas , el bot pedirá el NIT o carnet del cliente para verificar si cumple con los requisitos para registrarse, en caso de estar habilitado se le pedirá una cantidad de parámetros obligatorios: Nombre completo, dirección, teléfono y correo. Una vez verificada su habilitación el cliente puede cancelar el registro si asi lo desea.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/registroCliente`.
+- Datos: comando `/registroCliente`
+- Resultado: El BOT retorna un mensaje "Ingrese NIT o carnet".
+2. El `Cliente` ingresa su NIT o carnet.
+- Datos: Ingresa `6864680`
+- Resultado: El BOT retorna un mensaje "Usted se encuentra habilitado para registrarse, desea continuar? si/no".
+3. El `Cliente` envía `/no`.
+- Datos: Envía no.
+- Resultado: El BOT le muestra el menú de inicio.
+
+
+### 100 - Solicitud de reserva de productos.
+
+*Autor*: Gutber Blanco Gomez
+
+*Fecha*: 08/03/2022
+
+*Prioridad*: ALTA
+
+#### Descripción
+Un `Cliente` el cual está habilitado para reservas (Histórias de usuario No 090) debe solicitar la reserva de productos por medio del chatbot, para esto debe especificar el o los productos que desea adquirir, asi como el día en el que se recogerá la mercadería, el cual no podrá exceder los 7 dias a partir de la solicitud. Una vez enviada la solicitud el `Personal de Metal Corp.` procederá a aprobar o negar la solicitud de reserva del cliente, en caso de que la `Solicitud` sea negada se debe agregar un detalle del porqué se negó dicha reserva. Caso contrario el `BOT` notificará al cliente que la solicitud fue aprobada. Además el `BOT` debe llevar un control de:
+
+ * El stock de los productos
+ * El registro de reservas realizadas (La reserva solo se puede cancelar 48 horas antes de  la fecha de entrega)
+ * El tiempo de duración de la reserva (La reserva durara un máximo de 2 dias después de la fecha de entrega)
+
+La solicitud pasará pos los siguientes estados:
+
+  * *SOLICITADO*: Cuando el cliente envía su solicitud de reserva al BOT y el BOT no la rechaza.
+  * *NO VÁLIDO*: Cuando el cliente envía su solicitud de reserva al BOT e ingresa una cantidad mayor al stock disponible del producto seleccionado o menor a 1.
+  * *APROBADO*: Solicitud de reserva aprobada por el personal de Metal Corp.
+  * *RECHAZADO*: Solicitud de reserva negada por el personal de Metal Corp.
+  * *CANCELADA*: El cliente canceló una solicitud de reserva APROBADA
+
+El diagrama de estados para la `SOLICITUD` será:
+
+[plantuml, format="png", id="estados-solicitud"]
+....
+@startuml
+
+[*] --> SOLICITADO
+SOLICITADO --> NO_VALIDO
+NO_VALIDO --> [*]
+SOLICITADO -> APROBADO
+SOLICITADO -> RECHAZADO
+RECHAZADO --> [*]
+APROBADO -> CANCELADO
+APROBADO --> [*]
+CANCELADO --> [*]
+
+@enduml
+....
+
+#### Escenarios
+1. El producto no está registrado en la Base de Datos.
+2. Validación de la cantidad.
+3. El cliente no esta habilitado para reservas.
+4. Seleccionar productos.
+5. El cliente solicita una reserva.
+6. El cliente cancela una reserva.
+7. El personal rechaza una solicitud de reserva.
+8. El personal acepta una solicitud de reserva.
+
+
+#### Casos de Prueba
+*100.1.1 El producto no se encuentra*
+Descripción: Al momento de realizar la reserva de un producto, el bot pedirá el nombre o código del producto.
+
+En caso de que el `cliente ingrese mal el parámetro o no exista el producto` no se debe proceder a reservar el producto.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/reservar`
+- Datos: comando `/reservar`
+- Resultado: El BOT pide el nombre o código del producto
+2. El `Cliente` ingresa caracteres especiales.
+- Datos: Ingresa `Pintura Roja🎨 `
+- Resultado: El BOT indica que no puede colocar caracteres especiales
+3. El `Cliente` ingresa un producto inexistente.
+- Datos: Ingresa `Llantas`
+- Resultado: El BOT le indica que el producto no existe en la tienda.
+
+*100.1.2 Validación de la cantidad*
+Descripción: Al momento de realizar la reserva de un producto, el bot pedirá una cantidad el cual debe ser ingresado por el cliente.
+
+En caso de que el `cliente ingrese una cantidad errónea` no se debe proceder a registrar el producto.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/realizar_reserva`.
+- Datos: comando `/realizar_reserva`
+- Resultado: El BOT pregunta por la cantidad que requiere.
+2. El `Cliente` ingresa el número 0.
+- Datos: Ingresa `0`
+- Resultado: El BOT indica que el número no puede ser 0 o negativo
+3. El `Cliente` coloca una cantidad mayor al stock.
+- Datos: Ingresa `Cantidad mayor al stock`
+- Resultado: El BOT le indica que la cantidad no puede superar al stock y le muestra el stock.
+4. El `Cliente` coloca una cantidad con decimales.
+- Datos: Ingresa `Cantidad con decimales`
+- Resultado: El BOT le indica que la cantidad no debe contener decimales, solo pueden ser numeros enteros.
+
+
+
+*100.1.3 El cliente no está habilitado para reservas*
+Descripción: Al momento de realizar la reserva de un producto, el bot verificará que el cliente este habilitado(Ver Historia 090) para realizar dicha reserva.
+
+En caso de que el `cliente no se encuentre habilitado` no se procederá a realizar la reserva.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/reservar`
+- Datos: comando `/reservar`
+- Resultado: El BOT le notificará que su usuario no esta habilitado y le mandara pasos para su habilitación.
+
+*100.1.4 Selección de productos*
+Descripción: Para poder solicitar una reserva el `cliente` debera seleccionar primero sus productos mediante una búsqueda del producto (Ver historia 105).
+
+Pasos:
+
+1. El `Cliente` envía el comando `/reservar`.
+- Datos: comando `/reservar`
+- Resultado: El BOT pide el nombre o código del producto
+2. El `Cliente` ingresa `Aluminio 4mm`.
+- Datos: Ingresa `Aluminio 4mm`
+- Resultado: El BOT muestra una lista de productos coincidentes con la búsqueda y pide seleccionar una opción (Ver Ejemplo 100.1).
+3. El `Cliente` selecciona una opción.
+- Datos: El cliente selecciona una opción.
+- Resultado: El BOT le muestra los detalles del producto y pide confirmar la reserva
+4. El `Cliente` envía comando `/realizar_reserva`.
+- Datos: comando `/realizar_reserva`
+- Resultado: El Bot pregunta por la cantidad que requiere. (Ver Caso de prueba 100.1.2)
+
+
+*100.1.5 El cliente solicita una reserva*
+Descripción: Una vez terminado la etapa de selección de productos, el `Cliente` podrá confirmar la reserva y el bot le pedirá una fecha con formato dd-mm-aaaa y no superior a 7 dias a partir de la fecha actual. Si el `cliente` no sigue el formato no se debera proceder a reservar el producto, caso contrario se le notificara que la solicitud de reserva fue enviada.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/confirmar_reserva`.
+- Datos: comando `/confirmar_reserva`
+- Resultado: El BOT pedirá que ingrese una fecha en el formato dd-mm-aaaa.
+2. El `Cliente` ingresa la fecha `05/06/2022`
+- Datos: Cliente ingresa `05/06/2022`
+- Resultado: El BOT le notifica que el formato es incorrecto.
+3. El `Cliente` ingresa una fecha fuera del rango.
+- Datos: Cliente ingresa fecha fuera del rango.
+- Resultado: El BOT le notificará que la fecha no puede superar los 7 dias.
+4: El `Cliente` ingresa `12-03-2022`.
+- Datos: Cliente ingresa `12-03-2022`
+- Resultado: El BOT le notifica que la solicitud fue enviada.
+
+*100.1.6 El cliente cancela una reserva*
+Descripción: Una vez aceptada una solicitud de reserva (Ver Caso de prueba ), el cliente podrá realizar la cancelación de la reserva siempre y cuando este dentro del tiempo permitido(día del pedido hasta 48 horas antes de la fecha de entrega), caso contrario el `Bot` le notificara que ya no puede cancelar la reserva.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/cancelar_reserva`.
+- Datos: comando `/cancelar_reserva`
+- Resultado: Si está dentro del tiempo permitido el `Bot` le notificara que la reserva fue cancelada, caso contrario le notificara que no se puede realizar la cancelación.
+
+*100.1.7 El personal rechaza una solicitud de reserva*
+Descripción: Cuando un `cliente` envía una solicitud de reserva, el `Bot` enviara la solicitud al `personal` de la empresa, si el personal de la empresa decide rechazar la solicitud, se deberá explicar el motivo del rechazo de la solicitud, el cual ha de ser enviado al `Cliente`.
+
+Pasos:
+
+1. El `Personal` recibe una solicitud de reserva.
+2. El `Personal` ve la solicitud y envía el comando `/rechazar_reserva`.
+- Datos: comando `/rechazar_reserva`
+- Resultado: El BOT pedirá el motivo del rechazo de la solicitud.
+3. El `Personal` ingresa el motivo del rechazo de la solicitud.
+- Datos: `Personal` envía motivo del rechazo.
+- Resultado: El BOT recibe el motivo y lo envía al `Cliente` que hizo la reserva.
+
+*100.1.8 El personal acepta una solicitud de reserva*
+Descripción: Cuando un `cliente` envía una solicitud de reserva, el `Bot` enviara la solicitud al `personal` de la empresa, si el personal de la empresa decide aceptar la solicitud, el `BOT` debera enviar una notificación al `cliente` que realizo el pedido, además se debera enviar un recordatorio cada dia desde el dia en que se aceptó la solicitud hasta 2 dias después de la fecha de entrega.
+
+Pasos:
+
+1. El `Personal` recibe una solicitud de reserva.
+2. El `Personal` ve la solicitud y envía el comando `/aceptar_reserva`.
+- Datos: comando `/aceptar_reserva`
+- Resultado: El BOT notificara al usuario la aceptación de la reserva y se le enviara un recordatorio cada dia hasta 2 dias después de la fecha de entrega.
+
+#### Ejemplos.
+*Ejemplo 100.1:*
+```
+Cliente: /reservar
+Bot: Por favor ingrése el nombre o código del producto ha reservar
+Cliente: Aluminio 3mm
+Bot: Se encontraron los siguientes productos, por favor seleccione una opción:
+     1. Aluminio 3mm Rectangular
+     2. Aluminio 3mm Barra
+     3. Aluminio Reforzado 3mm
+     4. Buscar otro producto
+Cliente: 2
+Bot: Aluminio 3mm Barra
+     Unidad: Metro
+     Precio: 35Bs.
+     Cantidad disponible: 15
+     Detalle: Aluminio 3mm Barra, marca strato
+     Desea realizar la reserva?
+Cliente: /realizar_reserva
+Bot: Por favor, ingrese la cantidad a reservar:
+Cliente: 7
+Bot: Desea agregar otro producto?
+     1. Si
+     2. No
+Cliente: 2
+Bot: Aluminio 3mm Barra cant. 15
+     Desea confirmar la reserva?
+Cliente: /Confirmar_reserva
+Bot: Por favor, ingrese la fecha para el recojo del producto.
+     (Ingrese la fecha en el formato dd-mm-aaaa)
+Cliente: 12-03-2022
+Bot: La solicitud de reserva fue enviada, por favor espere un momento.
+(Ver Ejemplo 100.2)
+Bot: La solicitud de reserva fue aprobada.
+     No Reserva: 1420
+     Producto: Aluminio 3mm Barra (Cod: 1503)
+     Cantidad: 15
+     Fecha de entrega: 12-03-2022
+```
+*Ejemplo 100.2:*
+```
+Bot: Tiene una solitud de reserva.
+     No Reserva: 1420
+     Producto: Aluminio 3mm Barra (Cod: 1503)
+     Cantidad: 15
+     Fecha de entrega: 12-03-2022
+     Desea aceptar la reserva?
+Personal: /Aceptar_reserva
+Bot: Se le notificara al cliente el estado de la reserva.
+```
+
+
+### 101 - Registro de producto en el sistema.
+
+*Autor*: Teddy Aruquipa Peralta
+
+*Fecha*: 03/03/2022
+
+*Prioridad*: MUY ALTA
+
+#### Descripción
+
+El `Administrador de Metal Corp.` debe poder realizar el registro de nuevos productos en el sistema por medio del mismo BOT, al momento de solicitar su registro, el Administrador deberá enviar la siguiente información:
+
+ * Nombre del producto.
+ * Categoría.
+ * Código.
+ * Foto del producto.
+ * Cantidad disponible.
+ * Dimensiones.
+ * Fabricante.
+ * Precio.
+
+Esta información será guardada en la BBDD y se colocará al producto en estado `DISPONIBLE`.
+
+El diagrama de secuencias para la presente historia es el siguiente:
+
+[plantuml, format="png", id="estados-solicitud"]
+....
+@startuml
+
+actor Administrador
+boundary "interfaz BOT" as GUI
+control "validador BOT" as CONTROL
+entity BOT
+database BaseBOT
+
+Administrador -> GUI : "/incio"
+GUI -> Administrador : "opciones"
+Administrador -> GUI : "/registrarProducto"
+GUI -> CONTROL : "Solicitud de registro de producto"
+CONTROL -> BOT : "validar productos registrados" 
+BOT -> BaseBOT : "obtener productos"
+BaseBOT -> BOT: "lista productos"
+BOT -> CONTROL: "Lista productos"
+CONTROL -> GUI: "Lista productos"
+Administrador -> GUI: "Tiene registrado los siguientes productos, ¿desea continuar?"
+GUI -> CONTROL: "OPCION SI"
+CONTROL -> BOT: "validar respuesta"
+BOT -> CONTROL: "Solicitar nuevos datos"
+CONTROL -> GUI: "Solicitar DATOS"
+Administrador -> GUI: "DATOS"
+GUI ->CONTROL : "DATOS INGRESADOS"
+CONTROL -> BOT: "DATOS VALIDADOS"
+BOT -> BaseBOT: "ALMACENAR DATOS PRODUCTOS"
+@enduml
+....
+
+#### Escenarios
+
+1. Validación de parametros ingresados.
+2. Registro CORRECTO.
+3. Producto ya registrado.
+
+#### Casos de Prueba
+
+*101.1.1 Verificación y Validación de parametros*
+Descripción: Al momento de realizar el registro de un producto, el bot pedirá una cantidad de parametros obligatorios: Nombre del producto, categoría, código, foto del producto, cantidad disponible, fabricante y precio.  los cuales deben ser ingresados por el administrador.
+
+En caso de que el `administrador ingrese un dato en el formato erróneo o que omita un dato` no se debe proceder a registrar el producto.
+
+Pasos:
+
+1. El `Administrador` envía el comando `/registrar_producto`.
+- Datos: comando `/registrar_producto`
+- Resultado: El BOT verifica los parametros ingresados.
+2. El `Administrador` ingresa una letra en el PRECIO.
+- Datos: Ingresa `78a.50`
+- Resultado: El BOT indica que el precio no puede contener letras.
+3. El `Administrador` no coloca la imagen del producto.
+- Datos: Imagen, no ingresada
+- Resultado: El BOT le indica que es obligatorio ingresar una imagen de referencia del producto.
+
+*101.2.1 Registro correcto de nuevo producto* 
+
+Descripción: Cuando el administrador desea añadir un nuevo producto y realice una solicitud de registro, pasará al formulario correspondiente y procederá a llenarlo.
+
+Pasos:
+
+ 1. Ingresar al BOT via Telegram y enviar el comando `/inicio`
+ - Datos: NINGUNO
+ - Resultado esperado: El BOT retorna un mensaje. "Que desea realizar?:
+
+    1) Registrar producto
+    2) Modificar o eliminar producto
+    3) Actualizar stock
+    4) Lista de productos
+
+ 2. El `Administrador` envía el comando `/registarProducto`
+ - Datos: comando `/registarProducto`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese nombre del producto"
+
+ 3. El `Administrador` ingresa el nombre del producto
+ - Datos: ingresa el `nombre del producto`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese la categoría del producto"
+
+ 4. El `Administrador` ingresa  la categoría del producto
+ - Datos: ingresa la `categoría del producto`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese el código del producto"
+
+ 5. El `Administrador` ingresa el código del producto
+ - Datos: ingresa la `código del producto`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese una imagen del producto"
+
+ 6. El `Administrador` ingresa una imagen del producto
+ - Datos: ingresa el `imagen del producto`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese la cantidad disponible del producto"
+
+ 7. El `Administrador` ingresa la cantidad disponible del producto
+ - Datos: ingresa el `cantidad disponible del producto`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese las dimensiones del producto, este espacio puede estar vacio"
+
+ 8. El `Administrador` ingresa las dimensiones del producto o deja espacio vacio
+ - Datos: ingresa el `dimensiones del producto` o deja el `espacio vacio`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese el fabricante del producto, este espacio puede estar vacio"
+
+ 9. El `Administrador` ingresa el fabricante del producto o deja espacio vacio
+ - Datos: ingresa el `fabricante del producto` o deja el `espacio vacio`
+ - Resultado esperado: El BOT retorna un mensaje. "Ingrese el precio de venta del producto"
+
+ 10. El `Administrador` ingresa el precio de venta del producto
+ - Datos: envio de un `precio de venta del producto`
+ - Resultado esperado: El BOT retorna un mensaje. "Registro completado"
+
+*101.3.1 Producto ya registrado.* 
+
+Descripción: Cuando el administrador desea añadir un nuevo producto y realice una solicitud de registro, se le mostrara una lista de todos los productos registrados que existan, al ya tener el producto regsitrado cancela el `registro de productos` y retornara al menu o inicio.
+
+Pasos:
+
+ 1. Ingresar al BOT via Telegram y enviar el comando `/inicio`
+ - Datos: NINGUNO
+ - Resultado esperado: El BOT retorna un mensaje. "Que desea realizar?:
+
+    1) Registrar producto
+    2) Modificar o eliminar producto
+    3) Actualizar stock
+    4) Lista de productos
+
+ 2. El `usuario` envía el comando `/registrarProducto`
+ - Datos: comando `/registrarProducto`
+ - Resultado esperado: El BOT retorna un mensaje. "Existen los siguientes productos registrados:
+
+    1) Categoria: Pintura
+    Nombre: Pintura Roja
+    Fabricante: Monopol
+    2) Categoria: Pintura
+    Nombre: Pintura Azul
+    Fabricante: Monopol
+    3) Categoria: Herramientas
+    Nombre: Martillo
+    Fabricante: 
+
+    Desea continuar con el registro del producto si/no:
+
+ 3. El `Administrador` ingresa el comando `no`
+ - Datos: ingresa el comando `no`
+ - Resultado esperado: El BOT retorna al menu de inicio
+
+### 102 - Solicitud de cotización de productos.
+
+*Autor*: José Marcos Luna
+
+*Fecha*: 10/03/2022
+
+*Prioridad*: ALTA
+
+#### Descripción
+Un `Cliente` que se dedica a la carpintería de aluminio necesita la cotización de cierta cantidad de productos para la construcción de una obra que adquirió y debe presentarlo a una empresa para que lo tomen en cuenta y pueda trabajar con dicha empresa.
+Entonces el cliente envía una solicitud de cotización de productos al `BOT` y el BOT procede a responder con nuevas opciones para que el cliente elija uno de los distintos grupos de materiales de construcción disponibles. El cliente debe escoger la opción que necesita y el BOT pregunta al la cantidad de cada producto. El cliente tendrá opción de añadir otro producto en particular que no esté en la lista.
+
+El BOT verificará que:
+
+* El cliente solo debe ingresar números mayores o iguales a 0.
+* El cliente tiene la opción ingresar números decimales.
+* El cliente no puede enviar emojis.
+* El cliente si necesita un color o varios de cierto producto lo podrá añadir ingresando una coma (,) para que pueda reconocer el BOT que se trata de un color o colores específicos
+* El dato completo del cliente (nombres, apellido, celular)
+
+La solicitud de cotización tiene los siguientes estados:
+
+* *SOLICITADO*: Cuando el cliente envía una solicitud de cotización de productos y el BOT confirma dicha solicitud.
+* *NO VÁLIDO*: Si el cliente envía emojis o números negativos al momento de ingresar la cantidad de productos que necesita.
+* *APROBADO*: Cuando el cliente llena los datos a detalle.
+* *RECHAZADO*: Será rechazado cuando el bot detecta que no se están ingresando adecuadamente la cantidad de los productos.
+* *CANCELADA*: El cliente se sale de la aplicación o si cancela su pedido
+
+El diagrama de estados para la `SOLICITUD` será:
+
+[plantuml, format="png", id="estados-solicitud102"]
+....
+@startuml
+actor cliente
+cliente -> BOT: Solicitar cotización
+cliente <- BOT: Envía opciones de los grupos de productos disponibles
+cliente -> BOT: Selecciona un grupo
+cliente <- BOT: Ingrese la cantidad,color
+cliente -> BOT: El cliente confirma su pedido
+cliente <- BOT: Envía la cotización en PDF
+@enduml
+....
+
+#### Escenarios
+1. El cliente ingresa datos no requeridos por el BOT.
+2. El cliente puede ingresar la cantidad de cada producto y el color.
+3. El cliente cancela su cotizacion.
+4. EL cliente puede añadir nuevos productos a su cotización
+
+#### Casos de Prueba
+*102.1.1 El cliente ingresa datos no requeridos*
+Descripción: Cuando el cliente ingresa emojis o varios puntos decimales.
+
+En caso de que el `cliente ingrese mal los datos` el bot debe indicar que no es permitido realizar dicha acción.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/cotizar`
+- Datos: comando `/realizar_cotizacion`
+- Resultado: El BOT envía opciones de grupo de productos.
+2. El `Cliente` ingresa caracteres repetidos.
+- Datos: Ingresa `5..65 `
+- Resultado: El BOT indica que no puede colocar varias veces los puntos decimales
+3. El `Cliente` ingresa números negativos.
+- Datos: Ingresa `-52.32`
+- Resultado: El BOT le indica que no puede ingresar datos negativos.
+4. El `Cliente` ingresa letras.
+- Datos: Ingresa `doce`
+- Resultado: El BOT le indica que no puede ingresar letras.
+
+*102.1.2 El cliente puede ingresar la cantidad del producto y el color*
+Descripción: Al momento de realizar la cotización el cliente podrá ingresar la cantidad de producto y tambien el color de necesita.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/cotizar`.
+- Datos: comando `/realizar_cotizacion`
+- Resultado: El BOT envía opciones de grupo de productos.
+2. El `Cliente` ingresa la opcion 1.
+- Datos: Ingresa `Grupo_de_herrajes_para_vidiro_templado_para_puerta_batiente`
+- Resultado: El BOT muestra la lista de dicho grupo y pregunta la cantidad y color para el producto Nº1
+3. El `Cliente` coloca una cantidad seguido con una coma (,) e ingresa el color.
+- Datos: Ingresa `Datos ingresados con éxtio`
+- Resultado: El BOT indica repite a preguntar la cantidad y el color.
+4. El `Cliente` finaliza el llenado de cotización
+- Datos: Ingresa `Datos guardados y se envía la cotización`
+- Resultado: El BOT le envia al cliente el documento.
+
+
+*102.1.3 El cliente cancela la cotización*
+Descripción: Cuando el cliente por alguna razón le informa al BOT con un comando que va a cancelar su cotización
+
+En caso de que el `cliente cancela la cotización` no se procederá a concluir la cotización.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/cotizar`
+- Datos: comando `/realizar_cotizacion`
+- Resultado: El BOT envía opciones de grupo de productos.
+2. El `Cliente` ingresa la opcion 2.
+- Datos: Ingresa `Grupo_de_herrajes_para_vidiro_templado_para_puerta_corrediza`
+- Resultado: El BOT muestra la lista de dicho grupo y pregunta la cantidad y color para el producto Nº1
+3. El `Cliente` coloca una cantidad seguido con una coma (,) e ingresa el color.
+- Datos: Ingresa `Datos ingresados con éxito`
+- Resultado: El BOT indica repite a preguntar la cantidad y el color.
+4. El `Cliente` envía el comando `/cancelar`
+- Datos: Ingresa `/cancelar_cotizacion`
+- Resultado: El BOT borra todos los datos y se sale al menú principal.
+
+*102.1.4 El cliente puede añadir nuevo productos a la cotizacion*
+Descripción: Cuando el cliente necesita añadir un producto a su cotización
+
+En caso de que el `cliente cancela la cotización` no se procederá a concluir la cotización.
+
+Pasos:
+
+1. El `Cliente` envía el comando `/cotizar`
+- Datos: comando `/realizar_cotizacion`
+- Resultado: El BOT envía opciones de grupo de productos.
+2. El `Cliente` ingresa la opcion 3.
+- Datos: Ingresa `Grupo_accesorios_para_ventanas_Línea_20`
+- Resultado: El BOT muestra la lista de dicho grupo y pregunta la cantidad y color para el producto Nº1
+3. El `Cliente` coloca una cantidad seguido con una coma (,) e ingresa el color.
+- Datos: Ingresa `Datos ingresados con éxito`
+- Resultado: El BOT indica repite a preguntar la cantidad y el color.
+4. El `Cliente` envía el comando `/nuevo`
+- Datos: Ingresa `/nuevo_producto`
+- Resultado: El BOT le indica al cliente que escriba el nuevo producto.
+5. El `Cliente` escribe el nombre del producto
+- Datos: Ingresa `/producto_nuevo_añadido`
+- Resultado: El BOT guarda el nuevo producto.
+
+### 089 - Solicitud de información de la empresa
+*Autor:* José Marcos Luna
+
+*Fecha:* 10/03/2022
+
+*Prioridad:* ALTA
+
+#### Descripción
+
+Un `cliente` desea saber la dirección exacta y horarios de atención de las sucursales. Por lo cual el cliente pregunta al `BOT` por la información de la empresa, entonces el BOT de forma amigable, le envía la dirección de las sucursales y los horarios de atención.
+
+* En caso de que la sucursal esté abierto, el BOT le indicará en cuánto tiempo va a cerrar.
+* En caso de que la sucursal esté cerrado, el BOT le indicará en cuanto tiempo abren las sucursales.
+
+La solicitud se hará por los siguientes estados:
+
+* *SOLICITADO*: Cuando el cliente envía su solicitud al BOT por los horarios de atención y el BOT envía su respuesta rápida.
+
+* *NO VÁLIDO*: Cuando el cliente envía al BOT algún emoji o caracter inadecuado.
+
+* *APROBADO*: Cuando el Cliente envía su solicitud y el BOT le indica si esta o no abierto y le indica el tiempo que cierra la sucursal
+
+El diagrama de estados será:
+
+[plantuml, format="png", id="estado-solicitud89"]
+....
+@startuml
+actor cliente
+cliente -> BOT: 1. Solicitar datos de las sucursales.
+cliente <- BOT: Enviar dirección de las sucursales
+cliente <- BOT: Enviar Horarios de atención.
+cliente <- BOT: Tiempo que falta para que cierre las sucursales
+@enduml
+....
