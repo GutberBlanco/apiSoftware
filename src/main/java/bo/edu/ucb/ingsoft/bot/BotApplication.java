@@ -31,14 +31,7 @@ public class BotApplication {
 
 		ApplicationContext context = SpringApplication.run(BotApplication.class, args);
 
-		try {
-			// Inicializamos libreria de bots
-			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-			// Registramos la implementación de nuestro BOT
-			telegramBotsApi.registerBot(new HhRrLongPollingBot(context));
-		} catch (TelegramApiException e) {
-			e.printStackTrace();
-		}
+
 	}
 
 }

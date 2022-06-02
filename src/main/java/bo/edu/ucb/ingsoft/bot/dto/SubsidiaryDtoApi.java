@@ -1,19 +1,17 @@
 package bo.edu.ucb.ingsoft.bot.dto;
 
-public class SubsidiaryDto {
+public class SubsidiaryDtoApi {
     private int id;
     private String name;
     private String location;
     private String timetable;
-    private String status;
     private int number;
 
-    public SubsidiaryDto(int id, String name, String location, String timetable, String status, int number) {
+    public SubsidiaryDtoApi(int id, String name, String location, String timetable, int number) {
         this.id = id;
         this.name = name;
         this.location = location;
         this.timetable = timetable;
-        this.status = status;
         this.number = number;
     }
 
@@ -47,14 +45,6 @@ public class SubsidiaryDto {
 
     public void setTimetable(String timetable) {
         this.timetable = timetable;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public int getNumber() {

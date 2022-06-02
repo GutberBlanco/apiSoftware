@@ -1,0 +1,8 @@
+GET http://localhost:8080/api/v1/subsidiary/
+
+###
+GET http://localhost:8080/api/v1/subsidiary/?pageSize=2&pageNumber=0
+
+###
+GET http://localhost:8080/api/v1/products/?name=p&pageSize=3&pageNumber=0
+
